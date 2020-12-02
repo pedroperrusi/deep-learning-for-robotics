@@ -37,7 +37,7 @@ class Net(nn.Module):
 net = Net(InputSize, NumClasses)     
 
 criterion =  nn.MSELoss() ###### Define The Loss Function Here! ######
-optimizer =  torch.optim.SGD(net.parameters(), lr=0.0001) ###### Define The Optimizer Here! ######
+optimizer =  torch.optim.SGD(net.parameters(), lr=0.00001) ###### Define The Optimizer Here! ######
 
 ##################################################################################################
 

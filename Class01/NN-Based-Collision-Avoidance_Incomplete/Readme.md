@@ -69,7 +69,7 @@ This program does three things:
 python PlayingTheModel.py
 
 ``````````````
-This program loads the neural network model and opens up the simulator. The bot is programmed to drive itself to the destination and feeding the sensor data to the neural network at everytime step.
+This program loads the neural network model and opens up the simulator. The bot is programmed to drive itself to the destination and feeding the sensor data to the neural network at every time step.
 If the neural network detects collision bot turns green and takes alternative action, to the action it was planning to take.
 
 
@@ -100,3 +100,34 @@ python PlayingTheModel.py 3
 python PlayingTheModel.py 4
 
 ``````````````
+
+Personal Notes
+---------------------------------------------------------------
+
+A neural network with a single hidden layer is able to reach the expected solution.
+
+If one uses the example network proposed in the [lecture](../intel-supervised.pdf), the Stochastic Gradient Descent will not convert right away.
+This can be observed already at the training step when the loss function stops decreasing at its second iteration.
+To solve this, a reduced learning rate allows the gradient to converge to a better solution.
+
+```python
+# Single hidden layer similar to the lecture
+class Net(nn.Module):
+    def __init__(self, InputSize,NumClasses):
+        super(Net, self).__init__()
+		self.fc1 = nn.Linear(InputSize, HiddenSize)
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Linear(HiddenSize, NumClasses)
+
+        
+    def forward(self, x):
+		out = self.fc1(x)
+        out = self.relu(out)
+        out = self.fc2(out)
+        return out
+
+net = Net(InputSize, NumClasses)     
+
+criterion =  nn.MSELoss() 
+optimizer =  torch.optim.SGD(net.parameters(), lr=0.00001) # learning rate is key to the convergence of the SGD
+```
