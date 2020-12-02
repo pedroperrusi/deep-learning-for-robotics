@@ -17,6 +17,9 @@ NumClasses = 1 # Output Size
 NumEpochs = 25
 HiddenSize = 10
 
+# CUDA support if available
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 # Create The Neural Network Model
 class Net(nn.Module):
     def __init__(self, InputSize,NumClasses):
@@ -35,9 +38,10 @@ class Net(nn.Module):
         return out
 
 net = Net(InputSize, NumClasses)     
+net.to(device)
 
 criterion =  nn.MSELoss() ###### Define The Loss Function Here! ######
-optimizer =  torch.optim.SGD(net.parameters(), lr=0.00001) ###### Define The Optimizer Here! ######
+optimizer =  torch.optim.Adam(net.parameters(), lr=1e-5) ###### Define The Optimizer Here! ######
 
 ##################################################################################################
 
@@ -47,8 +51,8 @@ if __name__ == "__main__":
     for j in range(NumEpochs):
         losses = 0
         for i in range(TrainSize):  
-            input_values = Variable(SensorNNData[i])
-            labels = Variable(SensorNNLabels[i])
+            input_values = Variable(SensorNNData[i]).to(device)
+            labels = Variable(SensorNNLabels[i]).to(device)
             # Forward + Backward + Optimize
             optimizer.zero_grad()
             outputs = net(input_values)
