@@ -36,17 +36,22 @@ output_shape = 4
 drop_rte = 0.1
 hidden_neurons = [40, 40, 40, 40,output_shape]
 model = FullyConnectedNetwork(input_shape, hidden_neurons, drop_rte)
+
+# Adapted to work on Torch 1.7
+if torch.cuda.is_available():
+    device = torch.device("cuda:0")
+    print("Using GPU Acceleration")
+else:
+    device = torch.device("cpu")
+    print("Not Using GPU Acceleration")
+model.to(device)
+
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
 def load_model(model):
     return model.load_state_dict(torch.load('./saved_models/deterministicmodel.pth'))
 
 load_model(model)
-if torch.cuda.is_available():
-    model.cuda()
-    print("Using GPU Acceleration")
-else:
-    print("Not Using GPU Acceleration")
 
 black = (0, 0, 0)
 gold = (255, 215, 0)
@@ -99,19 +104,16 @@ while True:
     #Calculate Inv Kinematic solution for the most recent sprite in the sprites list
     if len(sprites) > 0 and num_steps_0 == 0 and num_steps_1 == 0 and mouse_state_bool:
         #Prepare data for neural network
-        if torch.cuda.is_available():
-            input_to_model = Variable(torch.from_numpy(np.asarray([(sprites[0][0] - origin[0] + 420)/840, (sprites[0][1] - origin[1] + 420)/840])).float().cuda())
-        else:
-            input_to_model = Variable(torch.from_numpy(np.asarray([(sprites[0][0] - origin[0] + 420)/840, (sprites[0][1] - origin[1] + 420)/840])).float())
+        input_to_model = Variable(torch.from_numpy(np.asarray([(sprites[0][0] - origin[0] + 420)/840, (sprites[0][1] - origin[1] + 420)/840])).float()).to(device)
         model.train() #In order to use dropout during inference time
 
         with torch.no_grad():
             #Collect list of model subnetworks inference results
             for iterator in range(sample_size_drop):
-                theta_0_sin, theta_0_cos, theta_1_sin, theta_1_cos = model.forward(input_to_model)
+                theta_0_sin, theta_0_cos, theta_1_sin, theta_1_cos = model.forward(input_to_model).data.cpu().numpy()
 
-                theta_0 = np.arctan2(theta_0_sin.item(), theta_0_cos.item())
-                theta_1 = np.arctan2(theta_1_sin.item(), theta_1_cos.item())
+                theta_0 = np.arctan2(theta_0_sin, theta_0_cos)
+                theta_1 = np.arctan2(theta_1_sin, theta_1_cos)
                 theta_0, theta_1 = helpers.convert_normal_angle(theta_0, theta_1)
                 lst_theta0.append(theta_0)
                 lst_theta1.append(theta_1)
@@ -125,10 +127,10 @@ while True:
 
         #Inference model using all connections and calc rotation for upper arm and lower arm
         model.eval()
-        theta_0_sin, theta_0_cos, theta_1_sin, theta_1_cos = model.forward(input_to_model)
+        theta_0_sin, theta_0_cos, theta_1_sin, theta_1_cos = model.forward(input_to_model).data.cpu().numpy()
 
-        theta_0 = np.arctan2(theta_0_sin.data[0], theta_0_cos.data[0])
-        theta_1 = np.arctan2(theta_1_sin.data[0], theta_1_cos.data[0])
+        theta_0 = np.arctan2(theta_0_sin, theta_0_cos)
+        theta_1 = np.arctan2(theta_1_sin, theta_1_cos)
         theta_0, theta_1 = helpers.convert_normal_angle(theta_0, theta_1)
 
         lst_theta0.append(theta_0)
