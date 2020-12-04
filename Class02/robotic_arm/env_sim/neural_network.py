@@ -22,7 +22,7 @@ class FullyConnectedNetwork(nn.Module):
         out_1 = self.drop(torch.tanh(self.h_1(out_0)))
         out_2 = self.drop(torch.tanh(self.h_2(out_1)))
         out_3 = self.drop(torch.tanh(self.h_3(out_2)))
-        out_4 = self.drop(torch.tanh(self.h_4(out_3)))
+        out_4 = torch.tanh(self.h_4(out_3))
 
         ###### Using The Defined Layers and F.tanh As The Nonlinear Function Between Layers Define Forward Function ######
 
