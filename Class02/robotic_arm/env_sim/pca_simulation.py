@@ -46,10 +46,10 @@ rotate_rte_1 = 0
 def calculate_pca(data, k=2):
 
     data = torch.from_numpy(data)
-    data_mean =  ###### Get Columnwise Mean of Data ######
+    data_mean =  torch.mean(data, 0)
     data = data - data_mean.expand_as(data)
 
-    U,S,V =  ###### Use PyTorch SVD To Extract U,S,V ######
+    U,S,V =  torch.svd(data, some=False, compute_uv=True)
     return U[:,:k], data_mean[0], data_mean[1]
 
 #################################################################################################
