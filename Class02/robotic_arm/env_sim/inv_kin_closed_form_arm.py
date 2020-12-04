@@ -42,15 +42,42 @@ hand_offset = 35
 def inv_kin_2arm(x, y, link0_length, link1_length):
 
     ###### Check End Effector Desired x,y is possible given link0 and link1 lengths ######
+    possible = np.linalg.norm(np.array([x, y])) < link0_length + link1_length
 
     ###### If x,y is impossible return -1,-1 ######
 
-    ###### If x,y Is Possible Return Theta Upper And Theta Lower Arm Respectively ######
+    if not possible:
+        return -1, -1
 
+    ###### If x,y Is Possible Return Theta Upper And Theta Lower Arm Respectively ######
+    # Compute theta_up using the law of cossines (as in slides)
+    C1 = (x*x + y*y - link0_length*link0_length - link1_length*link1_length)/(2*link0_length*link1_length)  
+    S1_possible = [np.sqrt(1 - C1*C1), -np.sqrt(1 - C1*C1)]  # two solutions for S1
+    
+    # iterate on both solutions
+    for S1 in S1_possible:
+        theta_up = np.arctan2(S1, C1)  # atan2 is more trustworthy to manage the quadrant of the final angle 
+        # on why to use atan2: 
+        #   - https://numpy.org/doc/stable/reference/generated/numpy.arctan2.html#numpy.arctan2
+        #   - https://stackoverflow.com/a/12011762
+        
+        # Exploiting the parallelogram geometry
+        L0 = link0_length + link0_length * C1
+        L1 = link1_length * S1
+
+        theta_down = np.arctan2(y, x) - np.arctan2(L1, L0)
+        # test its validity
+        test_x = (link0_length*np.cos(theta_down) + link1_length*np.cos(theta_down+theta_up))
+        test_y = (link0_length*np.sin(theta_down) + link1_length*np.sin(theta_down+theta_up))
+        if (test_x and test_y):
+            return theta_down, theta_up
+
+    # if return was not reached... no solutions are valid
+    return -1, -1
 
 #################################################################################################
 
-'''Main Script Logic'''
+# Main Script Logic 
 while True:
     display.fill(white)
 
